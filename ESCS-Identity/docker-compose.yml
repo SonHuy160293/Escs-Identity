@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  # .NET API service
+  identity.api:
+    build:
+      context: .
+      dockerfile: Dockerfile  # This points to the Dockerfile for building the .NET API image
+    ports:
+      - "8080:80"  # Expose port 80 inside the container as port 8080 on the host
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__OracleConnection=User Id=SYSTEM;Password=123;Data Source=oracle-db:1521/oracleSID  # Connection string to the Oracle DB container
+    depends_on:
+      - oracle-db  # Ensure Oracle DB container starts before the .NET API
+
+  # Oracle Database service
+  oracle-db:
+    image: oracle/database:19.3.0-ee  # Use the official Oracle DB image
+    container_name: oracle-db
+    environment:
+      - ORACLE_PASSWORD=123  # Set the password for the Oracle DB user
+      - ORACLE_SID=oracleSID  # Set the Oracle SID
+    ports:
+      - "1521:1521"  # Expose Oracle's default port (1521) to the host
+    volumes:
+      - oracle-data:/opt/oracle/oradata  # Persist data in a named volume
+
+# Named volumes to persist Oracle database data
+volumes:
+  oracle-data:
